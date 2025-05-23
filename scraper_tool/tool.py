@@ -1,5 +1,5 @@
 from langchain_core.tools import Tool
-from scraper_tool.fetcher import fetch_stock_data_yf
+from .fetcher import fetch_stock_data_yf
 
 def get_stock_info_tool(ticker: str) -> str:
     data = fetch_stock_data_yf(ticker)
