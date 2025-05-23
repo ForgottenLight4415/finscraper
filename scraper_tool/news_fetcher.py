@@ -37,10 +37,3 @@ def fetch_finance_news(ticker: str, scrolls: int = 5) -> List[Dict[str, str]]:
             articles.append({"title": title, "link": link, "summary": summary})
 
     return articles
-
-if __name__ == "__main__":
-    news = fetch_finance_news("AAPL", scrolls=1)
-    for idx, article in enumerate(news, start=1):
-        print(f"{idx}. {article['title']}")
-        print(f"   {article['link']}")
-        print(f"   {article['summary']}\n")
