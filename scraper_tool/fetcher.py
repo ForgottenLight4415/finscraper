@@ -1,6 +1,6 @@
 import yfinance as yf
-from scraper_tool.models import StockData
-from scraper_tool.cache import default_cache
+from .models import StockData
+from .cache import default_cache
 from curl_cffi.requests.exceptions import HTTPError
 
 @default_cache()
