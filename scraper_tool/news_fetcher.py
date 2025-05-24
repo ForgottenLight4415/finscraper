@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from typing import List, Dict
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def extract_article_content(url: str) -> str:
     options = Options()
@@ -25,12 +26,16 @@ def extract_article_content(url: str) -> str:
     driver.quit()
 
     # Get the first article only
-    article_tag = soup.select_one("article div.body")
+    article_tag = soup.select_one("article")
     if not article_tag:
         return "Main article not found"
 
-    paragraphs = article_tag.select("p")
-    content = " ".join(p.text.strip() for p in paragraphs if p.text.strip())
+    body_div = article_tag.find("div", class_="body")
+    if not body_div:
+        return "Body div not found"
+
+    paragraphs = body_div.find_all("p")
+    content = " ".join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
     return content or "Content not found"
 
 def fetch_finance_news(ticker: str, scrolls: int = 5, limit: int = 3) -> List[Dict[str, str]]:
@@ -69,11 +74,16 @@ def fetch_finance_news(ticker: str, scrolls: int = 5, limit: int = 3) -> List[Di
         if len(articles) == limit:
             break
 
-    for article in articles:
-        article["content"] = extract_article_content(article["link"])
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        future_to_article = {
+            executor.submit(extract_article_content, article["link"]): article
+            for article in articles
+        }
+        for future in as_completed(future_to_article):
+            article = future_to_article[future]
+            try:
+                article["content"] = future.result()
+            except Exception as e:
+                article["content"] = f"Error: {e}"
 
     return articles
-
-import json
-data = json.dumps(fetch_finance_news(ticker="AAPL", scrolls=1), indent=2)
-print(data)
